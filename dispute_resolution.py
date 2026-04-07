@@ -1,38 +1,18 @@
 # { "Depends": "py-genlayer:test" }
 
-# ============================================================
-#  Onchain Dispute Resolution
-#  Bradbury Special Track — GenLayer Hackathon
-#
-#  Two parties submit evidence about a dispute and the AI
-#  decides who is right based on the evidence provided.
-#  Multiple validators independently evaluate and must agree
-#  through Optimistic Democracy consensus.
-#
-#  Requirements met:
-#    ✅ Optimistic Democracy consensus
-#    ✅ Equivalence Principle (gl.vm.run_nondet_unsafe)
-# ============================================================
-
 import json
 from genlayer import *
 
 
 class DisputeResolution(gl.Contract):
 
-    # ── State ──────────────────────────────────────────────
-    owner: str
+    owner: Address
     dispute_counter: u256
-    dispute_data: DynArray[str]   # flat key:value storage
+    dispute_data: DynArray[str]
 
-    # ── Constructor ────────────────────────────────────────
-    def __init__(self, owner_address: str):
+    def __init__(self, owner_address: Address):
         self.owner = owner_address
         self.dispute_counter = u256(0)
-
-    # ══════════════════════════════════════════════════════
-    #  READ FUNCTIONS
-    # ══════════════════════════════════════════════════════
 
     @gl.public.view
     def get_dispute(self, dispute_id: str) -> str:
@@ -59,10 +39,6 @@ class DisputeResolution(gl.Contract):
             f"Total Disputes: {int(self.dispute_counter)}"
         )
 
-    # ══════════════════════════════════════════════════════
-    #  OPEN DISPUTE
-    # ══════════════════════════════════════════════════════
-
     @gl.public.write
     def open_dispute(
         self,
@@ -71,13 +47,6 @@ class DisputeResolution(gl.Contract):
         party_b_name: str,
         context: str,
     ) -> str:
-        """
-        Opens a new dispute between two parties.
-        Anyone can open a dispute by providing:
-        - A title describing what the dispute is about
-        - The names of the two parties involved
-        - Context explaining the situation
-        """
         caller = str(gl.message.sender_address)
         dispute_id = str(int(self.dispute_counter))
 
@@ -96,10 +65,6 @@ class DisputeResolution(gl.Contract):
         self.dispute_counter = u256(int(self.dispute_counter) + 1)
         return f"Dispute {dispute_id} opened. Title: {title}"
 
-    # ══════════════════════════════════════════════════════
-    #  SUBMIT EVIDENCE
-    # ══════════════════════════════════════════════════════
-
     @gl.public.write
     def submit_evidence(
         self,
@@ -107,11 +72,6 @@ class DisputeResolution(gl.Contract):
         party: str,
         evidence: str,
     ) -> str:
-        """
-        Submit evidence for a party in the dispute.
-        party must be exactly 'A' or 'B'
-        evidence is a text description of the party's side of the story
-        """
         assert self._get(dispute_id, "status") == "open", "Dispute is not open"
         assert party in ("A", "B"), "Party must be A or B"
         assert 10 <= len(evidence) <= 1000, "Evidence must be 10 to 1000 characters"
@@ -122,21 +82,8 @@ class DisputeResolution(gl.Contract):
         party_name = self._get(dispute_id, f"party_{party.lower()}")
         return f"Evidence submitted for {party_name} in dispute {dispute_id}"
 
-    # ══════════════════════════════════════════════════════
-    #  RESOLVE DISPUTE — Equivalence Principle ✅
-    # ══════════════════════════════════════════════════════
-
     @gl.public.write
     def resolve(self, dispute_id: str) -> str:
-        """
-        Resolves the dispute using AI evaluation.
-        The AI reads both sides of the story and the context,
-        then decides who has the stronger case.
-
-        Uses gl.vm.run_nondet_unsafe so multiple validators
-        independently evaluate and must agree on the winner
-        before the result is committed on-chain. ✅
-        """
         assert self._get(dispute_id, "status") == "open", "Dispute is not open"
 
         title = self._get(dispute_id, "title")
@@ -197,11 +144,6 @@ No extra text."""
             }, sort_keys=True)
 
         def validator_fn(leader_result) -> bool:
-            """
-            Validators independently evaluate the dispute.
-            Winner must match exactly.
-            Confidence within +-10 points. ✅
-            """
             if not isinstance(leader_result, gl.vm.Return):
                 return False
             try:
@@ -237,10 +179,6 @@ No extra text."""
             f"{reasoning}"
         )
 
-    # ══════════════════════════════════════════════════════
-    #  INTERNAL HELPERS
-    # ══════════════════════════════════════════════════════
-
     def _get(self, dispute_id: str, field: str) -> str:
         key = f"{dispute_id}_{field}:"
         for i in range(len(self.dispute_data)):
@@ -255,3 +193,5 @@ No extra text."""
                 self.dispute_data[i] = f"{key}{value}"
                 return
         self.dispute_data.append(f"{key}{value}")
+
+      

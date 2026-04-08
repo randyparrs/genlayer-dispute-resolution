@@ -10,8 +10,8 @@ class DisputeResolution(gl.Contract):
     dispute_counter: u256
     dispute_data: DynArray[str]
 
-    def __init__(self, owner_address: Address):
-        self.owner = owner_address
+    def __init__(self, owner_address: str):
+        self.owner = Address(owner_address)
         self.dispute_counter = u256(0)
 
     @gl.public.view
@@ -193,5 +193,4 @@ No extra text."""
                 self.dispute_data[i] = f"{key}{value}"
                 return
         self.dispute_data.append(f"{key}{value}")
-
-      
+ 

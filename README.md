@@ -42,6 +42,8 @@ Go to GenLayer Studio at https://studio.genlayer.com and create a new file calle
 
 Then follow this order. Open a dispute first and wait for it to finalize. Check get_dispute to confirm the status says open before submitting any evidence. Submit evidence for Party A and wait for it to finalize. Then submit evidence for Party B and wait again. Only call resolve after both evidences are finalized.
 
+Note: the contract in this repository uses the Address type in the constructor as required by genvm-lint. When deploying in GenLayer Studio use a version that receives str in the constructor and converts internally with Address(owner_address) since Studio requires primitive types to parse the contract schema correctly.
+
 ## Built with
 
 GenLayer Studio, Python using the GenLayer Intelligent Contract SDK, gl.vm.run_nondet_unsafe for the Equivalence Principle, and Optimistic Democracy consensus.

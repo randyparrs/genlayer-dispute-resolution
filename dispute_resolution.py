@@ -8,10 +8,10 @@ class DisputeResolution(gl.Contract):
 
     owner: Address
     dispute_counter: u256
-    dispute_data: DynArray[str]
+    dispute_data: DynArray[str]  # flat key:value storage
 
-    def __init__(self, owner_address: str):
-        self.owner = Address(owner_address)
+    def __init__(self, owner_address: Address):
+        self.owner = owner_address
         self.dispute_counter = u256(0)
 
     @gl.public.view
@@ -35,7 +35,7 @@ class DisputeResolution(gl.Contract):
     @gl.public.view
     def get_summary(self) -> str:
         return (
-            f"=== Onchain Dispute Resolution ===\n"
+            f"Onchain Dispute Resolution\n"
             f"Total Disputes: {int(self.dispute_counter)}"
         )
 
@@ -194,3 +194,4 @@ No extra text."""
                 return
         self.dispute_data.append(f"{key}{value}")
  
+       
